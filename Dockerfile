@@ -132,6 +132,19 @@ cd pointcloud-master && \
 ./autogen.sh && ./configure && make -j 4 && make install && \
 cd .. && rm -Rf pointcloud-master
 
+# Compile pgvector extension
+ARG PGVECTOR_VERSION=0.8.1
+
+ADD https://github.com/pgvector/pgvector.git#v${PGVECTOR_VERSION} /tmp/pgvector
+
+RUN cd /tmp/pgvector && \
+    make clean && \
+    make OPTFLAGS="" && \
+    make install && \
+    mkdir -p /usr/share/doc/pgvector && \
+    cp LICENSE README.md /usr/share/doc/pgvector && \
+    rm -rf /tmp/pgvector
+
 # Cleanup resources
 RUN apt-get -y --purge autoremove  \
     && apt-get clean \

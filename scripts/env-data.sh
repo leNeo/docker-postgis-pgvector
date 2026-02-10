@@ -342,9 +342,9 @@ function postgres_ssl_setup() {
 
 if [ -z "${POSTGRES_MULTIPLE_EXTENSIONS}" ]; then
     if [[ $(dpkg -l | grep "timescaledb") > /dev/null ]];then
-        POSTGRES_MULTIPLE_EXTENSIONS='postgis,hstore,postgis_topology,postgis_raster,pgrouting,timescaledb'
+        POSTGRES_MULTIPLE_EXTENSIONS='postgis,hstore,postgis_topology,postgis_raster,pgrouting,vector,timescaledb'
     else
-        POSTGRES_MULTIPLE_EXTENSIONS='postgis,hstore,postgis_topology,postgis_raster,pgrouting'
+        POSTGRES_MULTIPLE_EXTENSIONS='postgis,hstore,postgis_topology,postgis_raster,pgrouting,vector'
     fi
 fi
 
@@ -646,6 +646,13 @@ function extension_install() {
 function directory_checker() {
   local DATA_PATH=$1
   if [ -d "$DATA_PATH" ]; then
+    # Skip read-only filesystems (e.g. Kubernetes ConfigMap/Secret mounts)
+    if ! touch "${DATA_PATH}/.rw_test" 2>/dev/null; then
+      echo "[Entrypoint] Skipping chown on read-only path: ${DATA_PATH}"
+      return 0
+    fi
+    rm -f "${DATA_PATH}/.rw_test"
+
     local DB_USER_PERM
     local DB_GRP_PERM
     DB_USER_PERM=$(stat -c '%U' "${DATA_PATH}")
@@ -655,7 +662,8 @@ function directory_checker() {
       chown -R "${USER}:${GROUP}" "${DATA_PATH}"
     fi
   else
-    chown "${USER}:${GROUP}" "${DATA_PATH}"
+    chown "${USER}:${GROUP}" "${DATA_PATH}" 2>/dev/null || \
+      echo "[Entrypoint] Skipping chown on read-only path: ${DATA_PATH}"
   fi
 }
 

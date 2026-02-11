@@ -646,24 +646,18 @@ function extension_install() {
 function directory_checker() {
   local DATA_PATH=$1
   if [ -d "$DATA_PATH" ]; then
-    # Skip read-only filesystems (e.g. Kubernetes ConfigMap/Secret mounts)
-    if ! touch "${DATA_PATH}/.rw_test" 2>/dev/null; then
-      echo "[Entrypoint] Skipping chown on read-only path: ${DATA_PATH}"
-      return 0
-    fi
-    rm -f "${DATA_PATH}/.rw_test"
-
     local DB_USER_PERM
     local DB_GRP_PERM
     DB_USER_PERM=$(stat -c '%U' "${DATA_PATH}")
     DB_GRP_PERM=$(stat -c '%G' "${DATA_PATH}")
 
     if [[ ${DB_USER_PERM} != "${USER}" ]] || [[ ${DB_GRP_PERM} != "${GROUP}" ]]; then
-      chown -R "${USER}:${GROUP}" "${DATA_PATH}"
+      # Use || true to handle read-only filesystems (K8s ConfigMap/Secret mounts)
+      # chown -R may partially fail on symlinked read-only files inside writable tmpfs dirs
+      chown -R "${USER}:${GROUP}" "${DATA_PATH}" 2>/dev/null || true
     fi
   else
-    chown "${USER}:${GROUP}" "${DATA_PATH}" 2>/dev/null || \
-      echo "[Entrypoint] Skipping chown on read-only path: ${DATA_PATH}"
+    chown "${USER}:${GROUP}" "${DATA_PATH}" 2>/dev/null || true
   fi
 }
 

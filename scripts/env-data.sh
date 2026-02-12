@@ -80,10 +80,12 @@ fi
 function generate_random_string() {
   STRING_LENGTH=$1
   random_pass_string=$(cat /dev/urandom | tr -dc '[:alnum:]' | head -c "${STRING_LENGTH}")
-  if [[ ! -f /scripts/.pass_${STRING_LENGTH}.txt ]]; then
-    echo "${random_pass_string}" > /scripts/.pass_"${STRING_LENGTH}".txt
+  # Write password files to /tmp instead of /scripts to avoid permission issues
+  # when /scripts ownership has been changed by non_root_permission
+  if [[ ! -f /tmp/.pass_${STRING_LENGTH}.txt ]]; then
+    echo "${random_pass_string}" > /tmp/.pass_"${STRING_LENGTH}".txt
   fi
-  RAND=$(cat /scripts/.pass_"${STRING_LENGTH}".txt)
+  RAND=$(cat /tmp/.pass_"${STRING_LENGTH}".txt)
   export RAND
 }
 

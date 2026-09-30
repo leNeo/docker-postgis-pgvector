@@ -133,7 +133,7 @@ cd pointcloud-master && \
 cd .. && rm -Rf pointcloud-master
 
 # Compile pgvector extension
-ARG PGVECTOR_VERSION=0.8.1
+ARG PGVECTOR_VERSION=0.8.6
 
 ADD https://github.com/pgvector/pgvector.git#v${PGVECTOR_VERSION} /tmp/pgvector
 

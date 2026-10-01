@@ -111,7 +111,7 @@ if [[ $# -eq 0 ]]; then
 
       echo '[Entrypoint] Waiting for Postgres readiness...'
 
-      until pg_isready -h localhost -p ${POSTGRES_PORT:-5432}; do
+      until pg_isready -h localhost -U postgres -p ${POSTGRES_PORT:-5432}; do
         sleep 1
       done
 
@@ -131,7 +131,7 @@ if [[ $# -eq 0 ]]; then
 
       echo '[Entrypoint] Waiting for Postgres readiness...'
 
-      until pg_isready -h localhost -p ${POSTGRES_PORT:-5432}; do
+      until pg_isready -h localhost -U postgres -p ${POSTGRES_PORT:-5432}; do
         sleep 1
       done
 
